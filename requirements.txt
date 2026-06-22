@@ -1,11 +1,4 @@
-# Numerical computing
 numpy
-
-# Image processing
 opencv-python
-
-# Visualization
 matplotlib
-
-# Progress bar for later experiments
 tqdm

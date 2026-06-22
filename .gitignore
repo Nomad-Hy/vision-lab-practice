@@ -1,4 +1,4 @@
-# Python
+# Python cache
 __pycache__/
 *.py[cod]
 
@@ -7,20 +7,20 @@ __pycache__/
 venv/
 env/
 
-# IDE
+# IDE settings
 .vscode/
 .idea/
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
+
+# Raw local data
+**/data/raw/*
 
 # Generated outputs
 **/outputs/images/*
 **/outputs/logs/*
 
-# Raw local data
-**/data/raw/*
-
-# Keep folder structure
+# Keep empty folder structure
 !**/.gitkeep
