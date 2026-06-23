@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Day 02 Interactive - Brightness Contrast Histogram</title>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0d1117; color: #e6edf3; }
+    main { max-width: 1100px; margin: 0 auto; padding: 28px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { color: #8b949e; line-height: 1.6; }
+    .panel { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 18px; margin: 18px 0; }
+    .controls { display: grid; grid-template-columns: 160px 1fr 90px; gap: 12px; align-items: center; }
+    input[type="range"] { width: 100%; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+    canvas { width: 100%; height: auto; background: #000; border-radius: 12px; border: 1px solid #30363d; }
+    code { background: #0d1117; padding: 2px 6px; border-radius: 6px; }
+    button { background: #238636; border: 0; color: white; border-radius: 10px; padding: 10px 14px; cursor: pointer; }
+    .warning { color: #f78166; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Day 02 Interactive: 밝기 · 대비 · 히스토그램</h1>
+  <p>슬라이더를 움직이면서 밝기(beta)와 대비(alpha)가 이미지와 히스토그램을 어떻게 바꾸는지 관찰한다. 실제 코드 구현 전 개념 이해용이다.</p>
+
+  <section class="panel">
+    <div class="controls">
+      <label for="alpha">대비 alpha</label>
+      <input id="alpha" type="range" min="0.3" max="2.5" value="1.0" step="0.05" />
+      <strong id="alphaValue">1.00</strong>
+
+      <label for="beta">밝기 beta</label>
+      <input id="beta" type="range" min="-120" max="120" value="0" step="5" />
+      <strong id="betaValue">0</strong>
+
+      <label for="noise">노이즈</label>
+      <input id="noise" type="range" min="0" max="40" value="8" step="1" />
+      <strong id="noiseValue">8</strong>
+    </div>
+    <p><button id="reset">초기화</button></p>
+    <p class="warning">관찰 질문: 밝기를 너무 올리면 흰 영역이 255에 붙는가? 대비를 너무 올리면 노이즈와 반사가 더 결함처럼 보이는가?</p>
+  </section>
+
+  <section class="grid">
+    <div class="panel">
+      <h2>원본 synthetic 이미지</h2>
+      <canvas id="original" width="480" height="320"></canvas>
+    </div>
+    <div class="panel">
+      <h2>보정 결과</h2>
+      <canvas id="processed" width="480" height="320"></canvas>
+    </div>
+    <div class="panel">
+      <h2>원본 히스토그램</h2>
+      <canvas id="histOriginal" width="480" height="220"></canvas>
+    </div>
+    <div class="panel">
+      <h2>보정 후 히스토그램</h2>
+      <canvas id="histProcessed" width="480" height="220"></canvas>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>기록 TODO</h2>
+    <p>1. alpha를 1.5 이상으로 올렸을 때 경계와 노이즈가 어떻게 변하는지 기록한다.</p>
+    <p>2. beta를 80 이상으로 올렸을 때 밝은 영역이 어떻게 되는지 기록한다.</p>
+    <p>3. 결과가 좋아진 경우와 실패한 경우를 각각 <code>notes/day02_log.md</code>에 적는다.</p>
+  </section>
+</main>
+<script>
+const W = 480, H = 320;
+const originalCanvas = document.getElementById('original');
+const processedCanvas = document.getElementById('processed');
+const histOriginalCanvas = document.getElementById('histOriginal');
+const histProcessedCanvas = document.getElementById('histProcessed');
+const alphaInput = document.getElementById('alpha');
+const betaInput = document.getElementById('beta');
+const noiseInput = document.getElementById('noise');
+const alphaValue = document.getElementById('alphaValue');
+const betaValue = document.getElementById('betaValue');
+const noiseValue = document.getElementById('noiseValue');
+const resetBtn = document.getElementById('reset');
+
+function clamp(v) { return Math.max(0, Math.min(255, Math.round(v))); }
+function makeOriginal(noiseAmp) {
+  const data = new Uint8ClampedArray(W * H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let v = 55 + x * 0.22 + y * 0.05;
+      if (x > 145 && x < 335 && y > 90 && y < 235) v += 55;
+      if (x > 210 && x < 275 && y > 135 && y < 190) v -= 45;
+      const dx = x - 360, dy = y - 95;
+      if (dx*dx + dy*dy < 28*28) v += 120;
+      const pseudoNoise = ((x * 13 + y * 7) % 17 - 8) * noiseAmp / 8;
+      data[y * W + x] = clamp(v + pseudoNoise);
+    }
+  }
+  return data;
+}
+function process(data, alpha, beta) {
+  const out = new Uint8ClampedArray(data.length);
+  for (let i = 0; i < data.length; i++) out[i] = clamp(data[i] * alpha + beta);
+  return out;
+}
+function drawGray(canvas, data) {
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(W, H);
+  for (let i = 0; i < data.length; i++) {
+    img.data[i*4] = data[i];
+    img.data[i*4+1] = data[i];
+    img.data[i*4+2] = data[i];
+    img.data[i*4+3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function histogram(data) {
+  const h = new Array(256).fill(0);
+  for (const v of data) h[v]++;
+  return h;
+}
+function drawHist(canvas, hist) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const maxV = Math.max(...hist);
+  ctx.strokeStyle = '#30363d';
+  ctx.beginPath();
+  for (let y = 0; y < canvas.height; y += 44) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
+  ctx.stroke();
+  ctx.fillStyle = '#58a6ff';
+  for (let i = 0; i < 256; i++) {
+    const x = i * canvas.width / 256;
+    const barH = hist[i] / maxV * (canvas.height - 20);
+    ctx.fillRect(x, canvas.height - barH, Math.max(1, canvas.width / 256), barH);
+  }
+}
+function render() {
+  const alpha = parseFloat(alphaInput.value);
+  const beta = parseInt(betaInput.value, 10);
+  const noise = parseInt(noiseInput.value, 10);
+  alphaValue.textContent = alpha.toFixed(2);
+  betaValue.textContent = beta;
+  noiseValue.textContent = noise;
+  const original = makeOriginal(noise);
+  const processed = process(original, alpha, beta);
+  drawGray(originalCanvas, original);
+  drawGray(processedCanvas, processed);
+  drawHist(histOriginalCanvas, histogram(original));
+  drawHist(histProcessedCanvas, histogram(processed));
+}
+[alphaInput, betaInput, noiseInput].forEach(el => el.addEventListener('input', render));
+resetBtn.addEventListener('click', () => { alphaInput.value = 1.0; betaInput.value = 0; noiseInput.value = 8; render(); });
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">
+  <rect width="1200" height="600" fill="#0d1117"/>
+  <text x="60" y="55" fill="#e6edf3" font-size="32" font-family="Arial" font-weight="700">Brightness · Contrast · Histogram Summary</text>
+  <g font-family="Arial">
+    <rect x="70" y="105" width="310" height="390" rx="20" fill="#161b22" stroke="#58a6ff" stroke-width="3"/>
+    <text x="225" y="150" fill="#58a6ff" font-size="26" text-anchor="middle" font-weight="700">Brightness</text>
+    <text x="105" y="205" fill="#e6edf3" font-size="20">Meaning</text>
+    <text x="105" y="235" fill="#8b949e" font-size="17">Overall lightness of image</text>
+    <text x="105" y="285" fill="#e6edf3" font-size="20">Effect</text>
+    <text x="105" y="315" fill="#8b949e" font-size="17">Pixel values move up/down</text>
+    <text x="105" y="365" fill="#e6edf3" font-size="20">Failure</text>
+    <text x="105" y="395" fill="#8b949e" font-size="17">Too high → saturation at 255</text>
+
+    <rect x="445" y="105" width="310" height="390" rx="20" fill="#161b22" stroke="#f78166" stroke-width="3"/>
+    <text x="600" y="150" fill="#f78166" font-size="26" text-anchor="middle" font-weight="700">Contrast</text>
+    <text x="480" y="205" fill="#e6edf3" font-size="20">Meaning</text>
+    <text x="480" y="235" fill="#8b949e" font-size="17">Difference between dark/light</text>
+    <text x="480" y="285" fill="#e6edf3" font-size="20">Effect</text>
+    <text x="480" y="315" fill="#8b949e" font-size="17">Edges may become clearer</text>
+    <text x="480" y="365" fill="#e6edf3" font-size="20">Failure</text>
+    <text x="480" y="395" fill="#8b949e" font-size="17">Noise/reflection may be amplified</text>
+
+    <rect x="820" y="105" width="310" height="390" rx="20" fill="#161b22" stroke="#3fb950" stroke-width="3"/>
+    <text x="975" y="150" fill="#3fb950" font-size="26" text-anchor="middle" font-weight="700">Histogram</text>
+    <text x="855" y="205" fill="#e6edf3" font-size="20">Meaning</text>
+    <text x="855" y="235" fill="#8b949e" font-size="17">Count of brightness values</text>
+    <text x="855" y="285" fill="#e6edf3" font-size="20">Effect</text>
+    <text x="855" y="315" fill="#8b949e" font-size="17">Shows distribution objectively</text>
+    <text x="855" y="365" fill="#e6edf3" font-size="20">Failure insight</text>
+    <text x="855" y="395" fill="#8b949e" font-size="17">Detects low light/overexposure</text>
+  </g>
+  <text x="60" y="555" fill="#8b949e" font-size="20" font-family="Arial">Portfolio point: show original, corrected images, histograms, processing logs, and failure cases together.</text>
+</svg>

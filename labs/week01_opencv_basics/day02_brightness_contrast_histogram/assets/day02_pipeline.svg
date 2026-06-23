@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420">
+  <rect width="1200" height="420" fill="#0d1117"/>
+  <text x="60" y="55" fill="#e6edf3" font-size="32" font-family="Arial" font-weight="700">Day 02 Pipeline: Lighting-Robust Preprocessing</text>
+  <g font-family="Arial" font-size="20" text-anchor="middle">
+    <rect x="55" y="130" width="150" height="95" rx="16" fill="#161b22" stroke="#58a6ff" stroke-width="3"/>
+    <text x="130" y="168" fill="#e6edf3">Input</text>
+    <text x="130" y="198" fill="#8b949e" font-size="16">raw image</text>
+
+    <rect x="255" y="130" width="150" height="95" rx="16" fill="#161b22" stroke="#58a6ff" stroke-width="3"/>
+    <text x="330" y="168" fill="#e6edf3">Grayscale</text>
+    <text x="330" y="198" fill="#8b949e" font-size="16">1 value/pixel</text>
+
+    <rect x="455" y="130" width="150" height="95" rx="16" fill="#161b22" stroke="#f78166" stroke-width="3"/>
+    <text x="530" y="168" fill="#e6edf3">Brightness</text>
+    <text x="530" y="198" fill="#8b949e" font-size="16">beta shift</text>
+
+    <rect x="655" y="130" width="150" height="95" rx="16" fill="#161b22" stroke="#d29922" stroke-width="3"/>
+    <text x="730" y="168" fill="#e6edf3">Contrast</text>
+    <text x="730" y="198" fill="#8b949e" font-size="16">alpha scale</text>
+
+    <rect x="855" y="130" width="150" height="95" rx="16" fill="#161b22" stroke="#3fb950" stroke-width="3"/>
+    <text x="930" y="168" fill="#e6edf3">Histogram</text>
+    <text x="930" y="198" fill="#8b949e" font-size="16">distribution</text>
+
+    <rect x="1045" y="130" width="105" height="95" rx="16" fill="#161b22" stroke="#bc8cff" stroke-width="3"/>
+    <text x="1098" y="168" fill="#e6edf3">Record</text>
+    <text x="1098" y="198" fill="#8b949e" font-size="16">failures</text>
+  </g>
+  <g stroke="#8b949e" stroke-width="4" fill="none" marker-end="url(#arrow)">
+    <path d="M210 178 H250"/>
+    <path d="M410 178 H450"/>
+    <path d="M610 178 H650"/>
+    <path d="M810 178 H850"/>
+    <path d="M1010 178 H1040"/>
+  </g>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/>
+    </marker>
+  </defs>
+  <text x="60" y="315" fill="#e6edf3" font-family="Arial" font-size="22" font-weight="700">Core question</text>
+  <text x="60" y="350" fill="#8b949e" font-family="Arial" font-size="19">When lighting changes, do pixel values shift, saturate, or lose contrast?</text>
+  <text x="60" y="382" fill="#8b949e" font-family="Arial" font-size="19">Record both useful corrections and failure cases such as reflection, noise, false positives, and missed defects.</text>
+</svg>
