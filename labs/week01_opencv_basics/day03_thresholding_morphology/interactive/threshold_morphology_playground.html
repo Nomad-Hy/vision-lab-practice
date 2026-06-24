@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Day 3 Threshold & Morphology Playground</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 24px;
+      line-height: 1.55;
+      background: #f7f7f7;
+      color: #222;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid #ddd;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+      padding: 16px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      background: #fafafa;
+    }
+    label { font-weight: 700; display: block; margin-bottom: 6px; }
+    input, select { width: 100%; }
+    canvas {
+      border: 1px solid #333;
+      image-rendering: pixelated;
+      width: 320px;
+      height: 320px;
+      background: #eee;
+    }
+    .canvases {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .panel { max-width: 330px; }
+    .caption { font-size: 14px; margin-top: 8px; color: #555; }
+    code { background: #eee; padding: 2px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Day 3 Threshold & Morphology Playground</h1>
+  <p>
+    이 HTML은 OpenCV 구현을 대신하는 정답 코드가 아니다.
+    threshold 값, kernel 크기, morphology 연산이 mask에 어떤 영향을 주는지 눈으로 이해하기 위한 학습 도구다.
+  </p>
+
+  <div class="controls">
+    <div>
+      <label for="threshold">Threshold: <span id="thresholdValue">128</span></label>
+      <input id="threshold" type="range" min="0" max="255" value="128" />
+    </div>
+    <div>
+      <label for="noise">Noise amount: <span id="noiseValue">18</span></label>
+      <input id="noise" type="range" min="0" max="60" value="18" />
+    </div>
+    <div>
+      <label for="kernel">Kernel size: <span id="kernelValue">3</span>x<span id="kernelValue2">3</span></label>
+      <input id="kernel" type="range" min="1" max="7" step="2" value="3" />
+    </div>
+    <div>
+      <label for="operation">Morphology operation</label>
+      <select id="operation">
+        <option value="none">none</option>
+        <option value="erosion">erosion</option>
+        <option value="dilation">dilation</option>
+        <option value="opening">opening</option>
+        <option value="closing">closing</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="canvases">
+    <div class="panel">
+      <h3>1. Synthetic grayscale image</h3>
+      <canvas id="grayCanvas" width="32" height="32"></canvas>
+      <div class="caption">밝기 변화, 물체, 노이즈를 단순화한 작은 이미지.</div>
+    </div>
+    <div class="panel">
+      <h3>2. Threshold mask</h3>
+      <canvas id="maskCanvas" width="32" height="32"></canvas>
+      <div class="caption">Threshold보다 밝은 픽셀을 흰색으로 표시.</div>
+    </div>
+    <div class="panel">
+      <h3>3. Morphology result</h3>
+      <canvas id="morphCanvas" width="32" height="32"></canvas>
+      <div class="caption">선택한 morphology 연산 후의 mask.</div>
+    </div>
+  </div>
+
+  <h2>관찰 질문</h2>
+  <ul>
+    <li>threshold를 올리면 흰 영역이 줄어드는가?</li>
+    <li>noise가 커지면 작은 흰 점이 늘어나는가?</li>
+    <li>erosion은 작은 흰 점을 지우지만 물체도 깎는가?</li>
+    <li>dilation은 끊긴 부분을 잇지만 서로 다른 영역을 붙이는가?</li>
+    <li>opening과 closing의 차이가 눈으로 보이는가?</li>
+  </ul>
+
+  <p>
+    Python/OpenCV 구현 시 공식 문서 키워드:
+    <code>cv.threshold</code>, <code>cv.adaptiveThreshold</code>, <code>cv.erode</code>,
+    <code>cv.dilate</code>, <code>cv.morphologyEx</code>.
+  </p>
+</div>
+
+<script>
+const W = 32, H = 32;
+const thresholdSlider = document.getElementById('threshold');
+const noiseSlider = document.getElementById('noise');
+const kernelSlider = document.getElementById('kernel');
+const operationSelect = document.getElementById('operation');
+const thresholdValue = document.getElementById('thresholdValue');
+const noiseValue = document.getElementById('noiseValue');
+const kernelValue = document.getElementById('kernelValue');
+const kernelValue2 = document.getElementById('kernelValue2');
+
+function makeGray(noiseAmount) {
+  const data = new Array(H).fill(0).map(() => new Array(W).fill(0));
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let v = 70 + x * 3 + y * 1.5;
+      const dx = x - 16, dy = y - 16;
+      if (dx * dx + dy * dy < 70) v += 85;
+      const patternNoise = ((x * 17 + y * 31) % 29) - 14;
+      v += patternNoise * (noiseAmount / 20);
+      data[y][x] = Math.max(0, Math.min(255, Math.round(v)));
+    }
+  }
+  return data;
+}
+
+function threshold(gray, t) {
+  return gray.map(row => row.map(v => v > t ? 1 : 0));
+}
+
+function erode(mask, k) {
+  const r = Math.floor(k / 2);
+  const out = new Array(H).fill(0).map(() => new Array(W).fill(0));
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let keep = 1;
+      for (let yy = y - r; yy <= y + r; yy++) {
+        for (let xx = x - r; xx <= x + r; xx++) {
+          if (yy < 0 || yy >= H || xx < 0 || xx >= W || mask[yy][xx] === 0) keep = 0;
+        }
+      }
+      out[y][x] = keep;
+    }
+  }
+  return out;
+}
+
+function dilate(mask, k) {
+  const r = Math.floor(k / 2);
+  const out = new Array(H).fill(0).map(() => new Array(W).fill(0));
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let any = 0;
+      for (let yy = y - r; yy <= y + r; yy++) {
+        for (let xx = x - r; xx <= x + r; xx++) {
+          if (yy >= 0 && yy < H && xx >= 0 && xx < W && mask[yy][xx] === 1) any = 1;
+        }
+      }
+      out[y][x] = any;
+    }
+  }
+  return out;
+}
+
+function morphology(mask, op, k) {
+  if (op === 'erosion') return erode(mask, k);
+  if (op === 'dilation') return dilate(mask, k);
+  if (op === 'opening') return dilate(erode(mask, k), k);
+  if (op === 'closing') return erode(dilate(mask, k), k);
+  return mask;
+}
+
+function drawGray(canvasId, data) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(W, H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      const v = data[y][x];
+      img.data[i] = img.data[i+1] = img.data[i+2] = v;
+      img.data[i+3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+function drawMask(canvasId, data) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(W, H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      const v = data[y][x] ? 255 : 0;
+      img.data[i] = img.data[i+1] = img.data[i+2] = v;
+      img.data[i+3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+function update() {
+  const t = Number(thresholdSlider.value);
+  const n = Number(noiseSlider.value);
+  const k = Number(kernelSlider.value);
+  const op = operationSelect.value;
+  thresholdValue.textContent = t;
+  noiseValue.textContent = n;
+  kernelValue.textContent = k;
+  kernelValue2.textContent = k;
+  const gray = makeGray(n);
+  const mask = threshold(gray, t);
+  const morphed = morphology(mask, op, k);
+  drawGray('grayCanvas', gray);
+  drawMask('maskCanvas', mask);
+  drawMask('morphCanvas', morphed);
+}
+
+[thresholdSlider, noiseSlider, kernelSlider, operationSelect].forEach(el => el.addEventListener('input', update));
+update();
+</script>
+</body>
+</html>
