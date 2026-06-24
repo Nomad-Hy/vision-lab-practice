@@ -13,7 +13,8 @@ Day 02 - common_todo.py
 """
 
 from pathlib import Path
-
+import matplotlib.pyplot as plt
+import cv2
 
 # TODO: 네 Day 2 폴더 기준 경로를 잡는다.
 # 힌트:
@@ -22,8 +23,21 @@ from pathlib import Path
 # - parents[1]이 왜 Day 2 폴더를 가리키는지 직접 print로 확인해본다.
 ROOT_DIR=Path(__file__).resolve().parent.parent
 INPUT_DIR=ROOT_DIR/"data"/"raw"
-OUTPUT_IMAGE_DIR=ROOT_DIR/"outputs"/"images"
-OUTPUT_LOG_DIR=ROOT_DIR/"outputs"/"logs"
+OUTPUT_DIR=ROOT_DIR/"outputs"
+OUTPUT_IMAGE_DIR=OUTPUT_DIR/"images"
+OUTPUT_LOG_DIR=OUTPUT_DIR/"logs"
+
+
+GRAYSCALE_IMAGE_DIR = OUTPUT_IMAGE_DIR / "01_grayscale"
+ADJUSTED_IMAGE_DIR = OUTPUT_IMAGE_DIR / "02_adjusted"
+HISTOGRAM_DIR = OUTPUT_DIR / "histograms"
+EQUALIZED_IMAGE_DIR=OUTPUT_IMAGE_DIR/"03_equalized"
+
+GRAYSCALE_LOG_DIR = OUTPUT_LOG_DIR / "01_grayscale"
+ADJUSTED_LOG_DIR = OUTPUT_LOG_DIR / "02_adjusted"
+EQUALIZED_LOG_DIR=OUTPUT_LOG_DIR/ "03_equalized"
+
+
 
 IMAGE_EXTENSIONS = ["*.jpg","*.jpeg","*.png"]
 
@@ -47,9 +61,18 @@ def ensure_output_dirs():
     
     OUTPUT_IMAGE_DIR.mkdir(parents=True,exist_ok=True)
     OUTPUT_LOG_DIR.mkdir(parents=True,exist_ok=True)
+    
+    GRAYSCALE_IMAGE_DIR.mkdir(parents=True,exist_ok=True)
+    ADJUSTED_IMAGE_DIR.mkdir(parents=True,exist_ok=True)
+    HISTOGRAM_DIR.mkdir(parents=True,exist_ok=True)
+    EQUALIZED_IMAGE_DIR.mkdir(parents=True,exist_ok=True)
 
+    GRAYSCALE_LOG_DIR.mkdir(parents=True,exist_ok=True)
+    ADJUSTED_LOG_DIR.mkdir(parents=True,exist_ok=True)
+    EQUALIZED_LOG_DIR.mkdir(parents=True,exist_ok=True)
     
-    
+
+
     
 
 
@@ -87,17 +110,25 @@ def find_first_image():
     return None        
             
        
-def find_all_image():
+def find_all_image(folder_path=None):
     image_paths=list()
     
-    for extension in IMAGE_EXTENSIONS:
-        for image_path in INPUT_DIR.glob(extension):
-            image_paths.append(image_path)
+    if folder_path:
+        for extension in IMAGE_EXTENSIONS:
+            for image_path in folder_path.glob(extension):
+                image_paths.append(image_path)
         
-    return image_paths
+        return image_paths
+    
+    else:
+        for extension in IMAGE_EXTENSIONS:
+            for image_path in INPUT_DIR.glob(extension):
+                image_paths.append(image_path)
+            
+        return image_paths
     
     
-    
+    return print(f'이미지를 찾지 못했습니다.')
          
     
     
@@ -249,7 +280,7 @@ def adjust_brightness_contrast(image, alpha, beta):
     
 
 
-def save_image(image, filename):
+def save_image(image,save_folder ,filename):
     """
     TODO:
     결과 이미지를 outputs/images/에 저장한다.
@@ -276,7 +307,10 @@ def save_image(image, filename):
     
     ensure_output_dirs()
     
-    save_path=OUTPUT_IMAGE_DIR/filename
+    save_folder.mkdir(parents=True,exist_ok=True)
+    
+    
+    save_path=save_folder/filename
     
     success=cv2.imwrite(save_path,image)
     if success:
@@ -287,7 +321,7 @@ def save_image(image, filename):
     
 
 
-def write_text_log(filename,dictionary):
+def write_text_log(filename,save_folder,dictionary):
     """
     TODO:
     로그를 outputs/logs/에 텍스트 파일로 저장한다.
@@ -315,7 +349,10 @@ def write_text_log(filename,dictionary):
     
     
     ensure_output_dirs()
-    log_path=OUTPUT_LOG_DIR/filename
+    
+    save_folder.mkdir(parents=True,exist_ok=True)
+    
+    log_path=save_folder/filename
     lines=[]
     
     for key,value in dictionary.items():
@@ -325,11 +362,121 @@ def write_text_log(filename,dictionary):
     
     log_path.write_text(log_text,encoding='utf-8')
     
+def compute_normalize_histogram(image):
+    """
+    TODO:
+    흑백 이미지의 히스토그램을 계산한다.
+
+    입력:
+    - gray_image: 흑백 이미지
+
+    처리:
+    - 0~255 밝기 값 각각이 몇 번 나왔는지 센다.
+
+    출력:
+    - 히스토그램 배열
+
+    찾아볼 키워드:
+    - OpenCV calcHist
+    - numpy histogram
+    - grayscale histogram 0 255
+
+    스스로 비교할 점:
+    - cv2.calcHist와 np.histogram 중 무엇이 더 이해하기 쉬운가?
+    """
+    # TODO 1: OpenCV 또는 NumPy 중 하나를 선택한다.
+    # TODO 2: 0~255 범위의 히스토그램을 계산한다.
+    # TODO 3: 계산된 히스토그램을 return한다.
+    hist_cv=cv2.calcHist([image],[0],None,[256],[0,256])
+    return hist_cv/hist_cv.sum()    
+
+
+    
+def save_histogram_plot(histogram_data,folder_path):
+    """
+    TODO:
+    여러 이미지의 히스토그램을 하나의 그래프로 저장한다.
+
+    입력:
+    - histogram_data: [(name, histogram), ...] 형태의 리스트
+    - filename: 저장할 그래프 파일명
+
+    찾아볼 키워드:
+    - matplotlib plot
+    - matplotlib savefig
+    - plt.figure
+    - plt.legend
+
+    그래프에서 볼 점:
+    - dark는 왼쪽으로 이동하는가?
+    - bright는 오른쪽으로 이동하는가?
+    - high_contrast는 분포가 넓어지는가?
+    """
+    # TODO 1: 그래프 figure를 만든다.
+    # TODO 2: histogram_data를 반복한다.
+    # TODO 3: 각 histogram을 plot한다.
+    # TODO 4: 제목, 축 이름, legend를 추가한다.
+    # TODO 5: outputs/images/에 저장한다.
+    # TODO 6: figure를 닫는다.
     
     
+    for key,value in histogram_data.items():
+        fig,ax=plt.subplots(figsize=(8,4))
     
     
+        for item in value:
+            ax.plot(item["hist"],label=item['variant'])
+
+        ax.set_title(f'Histogram Comparison:{key} ({item["stage"]})')
+        ax.set_xlabel("Pixel Indensity")
+        ax.set_ylabel("Pixel Ratio")
+        ax.set_xlim([0,255])
+        ax.legend()
+        
+        
+        fig.tight_layout() #여백 자동조정
+        
+        
+        
+        save_path=folder_path/f'{key}__{item["stage"]}__hist.jpg'
+        fig.savefig(save_path,dpi=150)
+        print(f'성공적으로 저장되었습니다 --> {save_path}')
+        
+        
+        plt.close(fig)    
+
+def make_histogram_data(image_path):
+    hist_dict=dict()
+    images=find_all_image(image_path)
     
+    for image in images:
+        gray_image = load_grayscale_image(image)
+        
+        if len(image.stem.split('__'))==2:
+            stage="adjusted"
+            gray_image_name,variant=image.stem.split('__')
+        elif len(image.stem.split('__'))==3:
+            gray_image_name,variant,stage=image.stem.split('__')
+        
+        
+        hist=compute_normalize_histogram(gray_image)
+        
+        item={
+            
+            "variant":variant,
+            "hist":hist,
+            "image_path":image,
+            "stage":stage
+        }
+        
+        
+        if gray_image_name not in hist_dict:
+            
+            hist_dict[gray_image_name]=[]
+            
+        hist_dict[gray_image_name].append(item)
+    
+    return hist_dict
     
 
 

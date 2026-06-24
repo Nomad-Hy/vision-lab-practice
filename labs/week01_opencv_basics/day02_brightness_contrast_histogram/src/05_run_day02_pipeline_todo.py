@@ -12,7 +12,9 @@ Day 02 - 05_run_day02_pipeline_todo.py
 4. 04_histogram_equalization_todo.py를 완성한다.
 5. 마지막으로 이 파일에서 전체 실행 흐름을 연결한다.
 """
-
+import subprocess
+import sys
+from pathlib import Path
 
 def run_step(script_name):
     """
@@ -36,7 +38,30 @@ def run_step(script_name):
     # TODO 2: script_name을 붙여 실행할 파일 경로를 만든다.
     # TODO 3: subprocess 또는 import 방식 중 하나를 선택한다.
     # TODO 4: 실행 전/후 메시지를 출력한다.
-    pass
+    
+    
+    src_path=Path(__file__).resolve().parent #src direction
+    script_path=src_path/script_name #실행할 파일 경로
+    
+    
+    
+    
+    print(f'실행할 파일:{script_name}')
+    
+    try:
+        subprocess.run([sys.executable,str(script_path)],check=True) #지금 이 파일을 실행하는 파이썬으로 파일 실행
+
+        print(f'\n{'*'*70}')
+        print(f'성공적으로 실행 되었습니다.')
+  
+    except subprocess.CalledProcessError as error:
+         print(f'\n{'!'*70}')
+         print(f'[FAILED]--> {script_name}')
+         print(f'returncode-->{error.returncode}')
+         print('에러를 확인해 주세요')
+         print(f'\n{'!'*70}')
+        
+         raise
 
 
 def main():
@@ -62,7 +87,12 @@ def main():
     # TODO 1: steps를 반복한다.
     # TODO 2: run_step(script_name)을 호출한다.
     # TODO 3: 에러가 발생하면 어떤 단계에서 실패했는지 출력한다.
-    pass
+    
+    for step in steps:
+        run_step(step)
+        
+    
+
 
 
 if __name__ == "__main__":

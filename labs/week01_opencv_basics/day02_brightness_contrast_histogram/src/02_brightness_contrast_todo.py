@@ -61,8 +61,8 @@ def run_one_experiment(gray_image,gray_image_name, name, alpha, beta):
     
     
     adjusted_image=adjust_brightness_contrast(gray_image,alpha,beta)
-    save_path=gray_image_name+f'_{name}.jpg'
-    save_image(adjusted_image,save_path)
+    save_path=gray_image_name+f'__{name}.jpg'
+    save_image(adjusted_image,common_todo.ADJUSTED_IMAGE_DIR,save_path)
     
     return compute_image_stats(adjusted_image)
 
@@ -93,22 +93,23 @@ def main():
     # TODO 4: logs 리스트 만들기
     # TODO 5: EXPERIMENTS 반복하면서 run_one_experiment() 호출
     # TODO 6: 로그 파일 저장
-    images=find_all_image()
-    
+    images=find_all_image(common_todo.GRAYSCALE_IMAGE_DIR)
+    print(images)
     if images==False:
         raise ValueError("이미지를 불러오지 못했습니다.")
+    
     
     for image in images:
         
         
+        gray_image = load_grayscale_image(image)
         
-        image_gray=load_grayscale_image(image)
 
-        image_gray_name=image.stem+'_gray'
+        image_name=image.stem
         for experiment in EXPERIMENTS:
-            stats=run_one_experiment(image_gray,image_gray_name,experiment[0],experiment[1],experiment[2])
-            log_path=image_gray_name+f'_{experiment[0]}_log'
-            write_text_log(log_path,stats)
+            stats=run_one_experiment(gray_image,image_name,experiment[0],experiment[1],experiment[2])
+            log_name=image_name+f'_{experiment[0]}_log'
+            write_text_log(log_name,common_todo.ADJUSTED_LOG_DIR,stats)
             
         
         

@@ -17,7 +17,7 @@ Day 02 - 01_inspect_image_todo.py
 # - Python에서 같은 폴더의 파일을 import하는 방법을 확인한다.
 
 from common_todo import find_first_image,load_grayscale_image,compute_image_stats,save_image,write_text_log,find_all_image
-
+import common_todo
 
 def print_stats(stats):
     """
@@ -90,9 +90,9 @@ def main():
     
         print_stats(image_stats)
     
-        save_image(image_name,image_path)
+        save_image(image_name,common_todo.GRAYSCALE_IMAGE_DIR,image_path)
     
-        write_text_log(image_log_path,image_stats)
+        write_text_log(image_log_path,common_todo.GRAYSCALE_LOG_DIR,image_stats)
     
     
     
