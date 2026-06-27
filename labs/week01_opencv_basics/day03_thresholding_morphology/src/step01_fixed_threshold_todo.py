@@ -7,19 +7,20 @@ Goal:
 
 from pathlib import Path
 
-# TODO: Uncomment imports when implementing.
-# import cv2 as cv
-# from common_todo import (
-#     DATA_RAW_DIR,
-#     OUTPUT_IMAGE_DIR,
-#     ensure_output_dirs_todo,
-#     find_input_images_todo,
-#     read_image_todo,
-#     to_grayscale_todo,
-#     save_image_todo,
-#     build_output_name_todo,
-# )
-
+import cv2 as cv
+import numpy as np
+from common_todo import (DATA_RAW_DIR,
+     OUTPUT_IMAGE_DIR,
+     OUTPUT_LOG_DIR,
+     ensure_output_dirs_todo,
+    find_all_input_images_todo,
+     read_image_todo,
+     to_grayscale_todo,
+     save_image_todo,
+     compute_image_stats,
+     write_text_log_todo,
+     build_experiment_log_todo
+     )
 
 def choose_threshold_values_todo():
     """
@@ -49,10 +50,16 @@ def choose_threshold_values_todo():
         현장에서는 threshold 값을 바꾸며 오탐/미탐 변화를 튜닝하는 경우가 많다.
     """
     # TODO: Return a list of threshold values.
-    pass
+    value_list=[50,100,110,120,150,200]
+    
+    return value_list
+    
+    
+    
+    
 
 
-def apply_fixed_threshold_todo(gray_image, threshold_value: int):
+def apply_fixed_threshold_todo(gray_image:object, threshold_value: int):
     """
     목적:
         grayscale 이미지에 하나의 기준값을 적용해 binary mask를 만든다.
@@ -83,7 +90,14 @@ def apply_fixed_threshold_todo(gray_image, threshold_value: int):
         빠른 후보 영역 분리에 가장 기본적으로 사용되는 방식이다.
     """
     # TODO: Apply fixed threshold and return binary mask.
-    pass
+    
+    ret,thresh=cv.threshold(gray_image,threshold_value,255,cv.THRESH_BINARY)
+    ret,thresh_inv=cv.threshold(gray_image,threshold_value,255,cv.THRESH_BINARY_INV)
+    
+    return thresh,thresh_inv
+    
+    
+    
 
 
 def inspect_fixed_threshold_result_todo(binary_mask, threshold_value: int):
@@ -116,7 +130,15 @@ def inspect_fixed_threshold_result_todo(binary_mask, threshold_value: int):
         threshold 값 튜닝은 단순 성공/실패가 아니라 오탐/미탐 균형을 보는 작업이다.
     """
     # TODO: Return observation text or metrics.
-    pass
+    
+    non_zero=np.count_nonzero(binary_mask)
+    
+    white_ratio=(non_zero/binary_mask.size)*100
+    print(f'white ratio-> {white_ratio}% threshold->{threshold_value}')
+    
+    
+    
+    
 
 
 def main():
@@ -160,7 +182,51 @@ def main():
     # TODO: Loop over threshold values
     # TODO: Save each binary mask
     # TODO: Write observations
-    pass
+    
+    ensure_output_dirs_todo()
+    
+    image_path=DATA_RAW_DIR/'main_image.png'
+    image=read_image_todo(image_path)
+    image_name=image_path.stem
+    
+    gray_image=to_grayscale_todo(image)
+    
+    threshold_list=choose_threshold_values_todo()
+    
+    for threshold in threshold_list:
+        binary_mask,binary_mask_inv=apply_fixed_threshold_todo(gray_image,threshold)
+        
+        results=[('binary',binary_mask),('binary_inv',binary_mask_inv)]
+        
+        
+        for mode_name,mask in results:
+        
+        
+            inspect_fixed_threshold_result_todo(mask,threshold)
+            
+            stats=compute_image_stats(mask)
+            
+            
+            result_name=f'{image_name}_fixed_{threshold}_{mode_name}.png'
+            log_name=f'{image_name}_fixed_{threshold}_{mode_name}_log'
+                        
+            log_record=build_experiment_log_todo(image_name,'fixed_threshold',mode_name,threshold,result_name,stats)
+            
+            save_image_todo(OUTPUT_IMAGE_DIR,result_name,mask)
+            write_text_log_todo(OUTPUT_LOG_DIR,log_name,log_record)
+           
+           
+            
+            
+        
+        
+        
+
+    
+    
+    
+    
+    
 
 
 if __name__ == "__main__":

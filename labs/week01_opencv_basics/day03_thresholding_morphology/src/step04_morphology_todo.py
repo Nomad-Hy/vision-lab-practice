@@ -8,6 +8,12 @@ Goal:
 # TODO: Uncomment imports when implementing.
 # import cv2 as cv
 # import numpy as np
+import numpy as np
+import cv2 as cv
+
+from common_todo import OUTPUT_IMAGE_DIR,OUTPUT_LOG_DIR,compute_image_stats,build_experiment_log_todo,write_text_log_todo,save_image_todo
+
+
 
 
 def choose_morphology_params_todo():
@@ -40,7 +46,15 @@ def choose_morphology_params_todo():
         mask 후처리 강도는 오탐/미탐 균형을 크게 바꾼다.
     """
     # TODO: Return morphology parameter combinations.
-    pass
+    
+    morphology_params=[{"operation": "opening", "kernel_size": 3, "iterations": 1},
+    {"operation": "opening", "kernel_size": 5, "iterations": 1},
+    {"operation": "closing", "kernel_size": 3, "iterations": 1},
+    {"operation": "closing", "kernel_size": 5, "iterations": 1},]
+    
+    return morphology_params
+    
+    
 
 
 def create_kernel_todo(kernel_size: int, shape_name: str = "rect"):
@@ -73,11 +87,23 @@ def create_kernel_todo(kernel_size: int, shape_name: str = "rect"):
     실무에서 왜 필요한지:
         kernel 크기와 모양은 작은 노이즈 제거, 구멍 메우기, 객체 병합 정도를 결정한다.
     """
-    # TODO: Create morphology kernel.
-    pass
+    
+    if kernel_size<=1 or kernel_size%2==0:
+        raise ValueError('커널 사이즈는 3이상의 홀수여야 합니다.')
+    
+    if shape_name=='rect':
+        kernel=cv.getStructuringElement(cv.MORPH_RECT,(kernel_size,kernel_size))
+    elif shape_name=='ellipse':
+        kernel=cv.getStructuringElement(cv.MORPH_ELLIPSE,(kernel_size,kernel_size))
+    elif shape_name=='cross':
+        kernel=cv.getStructuringElement(cv.MORPH_CROSS,(kernel_size,kernel_size))
+           
+    return kernel
+    
+    
 
 
-def apply_morphology_todo(binary_mask, operation_name: str, kernel, iterations: int):
+def apply_morphology_todo(binary_mask, operation_name: str, kernel, iteration: int):
     """
     목적:
         binary mask에 morphology 연산을 적용한다.
@@ -109,42 +135,25 @@ def apply_morphology_todo(binary_mask, operation_name: str, kernel, iterations: 
         threshold 결과는 보통 지저분하기 때문에 후처리 없이는 안정적인 검사 후보를 얻기 어렵다.
     """
     # TODO: Apply selected morphology operation.
-    pass
+    
+    
+    if operation_name=='erode':
+        result=cv.erode(binary_mask,kernel,iterations=iteration)
+    elif operation_name=='dilate':
+        result=cv.dilate(binary_mask,kernel,iterations=iteration)
+    elif operation_name=='opening':
+        result=cv.morphologyEx(binary_mask,cv.MORPH_OPEN,kernel=kernel,iterations=iteration)
+    elif operation_name=='closing':
+        result=cv.morphologyEx(binary_mask,cv.MORPH_CLOSE,kernel=kernel,iterations=iteration)    
+        
+    
+    item={'mask':result,'operation':operation_name,'kernel':kernel,'iteration':iteration}
+    
+    return item
+    
+    
+    
 
-
-def inspect_morphology_result_todo(original_mask, refined_mask, operation_name: str):
-    """
-    목적:
-        morphology가 mask 품질을 개선했는지 또는 손상했는지 관찰한다.
-
-    입력:
-        original_mask: morphology 전 mask.
-        refined_mask: morphology 후 mask.
-        operation_name: 적용한 morphology 이름.
-
-    처리:
-        - 작은 흰 노이즈가 줄었는지 본다.
-        - 물체 내부 구멍이 메워졌는지 본다.
-        - 실제 물체의 얇은 부분이 사라졌는지 본다.
-        - 서로 다른 영역이 붙었는지 본다.
-
-    출력:
-        관찰 메모 문자열.
-
-    직접 구현할 TODO:
-        - 전/후 흰색 픽셀 수를 비교할지 생각한다.
-        - 눈으로 본 오탐/미탐 변화를 기록한다.
-        - operation별 장단점을 한 줄로 요약한다.
-
-    찾아볼 공식 문서/검색 키워드:
-        - morphology false positive false negative mask
-        - binary mask post-processing
-
-    실무에서 왜 필요한지:
-        후처리는 불량 후보를 지우거나 키울 수 있으므로 반드시 실패 분석이 필요하다.
-    """
-    # TODO: Return observation text.
-    pass
 
 
 def main():
@@ -176,8 +185,31 @@ def main():
     실무에서 왜 필요한지:
         실제 검사 이미지에서는 threshold 결과를 그대로 쓰기 어렵고, mask 정리 과정이 필요하다.
     """
-    print("TODO: implement morphology experiment step by step.")
-    pass
+    
+    
+    binary_mask_path=OUTPUT_IMAGE_DIR/'main_image_adaptive_gaussian_bs_31_cs_10.png'
+    binary_mask=cv.imread(binary_mask_path)
+    binary_mask_name=binary_mask_path.stem
+    experiments=choose_morphology_params_todo()
+    
+    for experiment in experiments:
+        kernel=create_kernel_todo(experiment["kernel_size"],'rect')
+
+        result=apply_morphology_todo(binary_mask,experiment["operation"],kernel,experiment['iterations']) # {'mask':result,'operation':operation_name,'kernel':kernel,'iteration':iteration}
+        
+        image_name=binary_mask_name+f'_{experiment["operation"]}_k_{experiment["kernel_size"]}_it_{experiment['iterations']}.png'
+        log_name=binary_mask_name+f'_{experiment["operation"]}_k_{experiment["kernel_size"]}_it_{experiment['iterations']}_log'
+        
+        
+        save_image_todo(OUTPUT_IMAGE_DIR,image_name,result['mask'])
+        stats=compute_image_stats(result['mask'])
+        log_record=build_experiment_log_todo(binary_mask_name,'Morphology',experiment["operation"],None,image_name,stats)
+        
+        write_text_log_todo(OUTPUT_LOG_DIR,log_name,log_record)
+        
+    
+    
+    
 
 
 if __name__ == "__main__":
