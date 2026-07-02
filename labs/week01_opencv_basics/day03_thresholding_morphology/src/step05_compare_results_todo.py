@@ -10,9 +10,12 @@ from pathlib import Path
 # TODO: Uncomment imports when implementing.
 # import cv2 as cv
 # import numpy as np
+import cv2 as cv
+import numpy as np
+from common_todo import OUTPUT_IMAGE_DIR
+from common_todo import save_image_todo
 
-
-def select_representative_images_todo(output_dir: Path):
+def select_representative_images_todo(output_dir: Path,image_name:str)->list[dict]:
     """
     목적:
         비교 grid에 넣을 대표 결과 이미지를 선택한다.
@@ -39,10 +42,34 @@ def select_representative_images_todo(output_dir: Path):
         결과 비교 이미지는 README, 보고서, 면접 설명에 바로 사용된다.
     """
     # TODO: Select images for comparison grid.
-    pass
+    
+    #이미지의 다양한 정보를 담기위한 list를생성해 준다.
+    image_items=list()
+    #먼저 비교할 이미지를 dir에서 찾는다. 대표이미지 별로 각 적용된 알고리즘에 따라 보면되니 앞부분 이름만 체크한다.
+    
+    images=list(output_dir.glob(image_name)) #path경로들이 map으로 반환 list에 담자
+    
+    #이미지를 찾지 못한경우 없다고 사용자에게 알려줘야 한다.
+    
+    if images is None:
+        raise ValueError(f'해당 경로에 대표 이미지가 존재 하지 않습니다. 현재경로->{output_dir}')
+    
+    #받은 이미지의 다양한 정보를 dict로 저장해 추후에 사용하기 유용하게 만들어준다.
+    for image in images:
+        image_items.append({'name':image.stem,'image_path':image})
+    
+    return image_items
+         
+    
+    
+    
+    
+    
+    
+    
 
 
-def load_and_resize_for_grid_todo(image_paths, target_size):
+def load_and_resize_for_grid_todo(images:list, target_size:tuple)->list[dict]:
     """
     목적:
         여러 결과 이미지를 같은 크기로 맞춰 비교하기 쉽게 만든다.
@@ -72,10 +99,26 @@ def load_and_resize_for_grid_todo(image_paths, target_size):
         비교 이미지 크기가 제각각이면 보고서와 README에서 보기 어렵다.
     """
     # TODO: Load and resize images.
-    pass
+    #받아온 리스트를 순회하며 target_size로 resize해준다.
+    if images is None:
+        raise ValueError('이미지를 찾지 못했습니다 :{images}')
+    
+    for image in images:
+        image["image"] = cv.resize(
+        cv.imread(str(image["image_path"])),
+        target_size
+        
+        
+    )
+        image['shape']=image['image'].shape
+    
+
+    #변환된 리스트를 그대로 반환한다.
+    return images
 
 
-def create_comparison_grid_todo(images, labels):
+
+def create_comparison_grid_todo(images:list[dict],colums:int,labels:bool)->object:
     """
     목적:
         여러 결과 이미지를 하나의 grid 이미지로 만든다.
@@ -105,7 +148,45 @@ def create_comparison_grid_todo(images, labels):
         팀원, 면접관, 고객에게 알고리즘 차이를 한눈에 보여줄 수 있다.
     """
     # TODO: Create comparison grid.
-    pass
+    #라벨 여부를 확인하고 true라면 put text로 이미지 정보를 넣는다.
+    if labels:
+        for image in images:
+            cv.putText(image['image'],image['name'],(image['shape'][1]//5,image['shape'][0]//10),cv.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
+            
+    
+    
+    
+    
+    
+    #이미지를 이어 붙이는데 4장 이상이면 너무 기니 행으로 쪼갠다.
+    result=[]
+    #먼저 전체 리스트에서 지정한 colums장씩 행으로 나눈다.
+    
+    
+    for row in range(0,len(images),colums):
+        rows=images[row:row+colums]
+
+        rows_images=[item['image']for item in rows]
+        while len(rows_images)<colums:
+            rows_images.append(np.zeros(image['shape'],dtype=np.uint8))
+            
+        row_himage=np.hstack(rows_images)
+        result.append(row_himage)
+    
+    grid=np.vstack(result)
+    
+    return grid
+        
+        
+    
+    
+    
+        
+    
+    
+    
+    
+    
 
 
 def main():
@@ -136,9 +217,14 @@ def main():
     실무에서 왜 필요한지:
         같은 입력에 대해 알고리즘별 결과를 비교해야 파라미터 선택 근거를 설명할 수 있다.
     """
-    print("TODO: implement result comparison grid step by step.")
-    pass
+    image_name='main_image*'
+    images=select_representative_images_todo(OUTPUT_IMAGE_DIR,image_name)
+    resized_images=load_and_resize_for_grid_todo(images,(400,400))
 
-
+    grid=create_comparison_grid_todo(resized_images,3,True)
+    
+    save_image_name='main_image_grid.png'
+    save_image_todo(OUTPUT_IMAGE_DIR,save_image_name,grid)
+    
 if __name__ == "__main__":
     main()

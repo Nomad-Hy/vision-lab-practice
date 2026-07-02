@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <style>
+      .title { font: 700 52px 'Noto Sans CJK KR', 'NanumSquare', sans-serif; fill: #e6edf3; }
+      .subtitle { font: 400 24px 'Noto Sans CJK KR', 'NanumSquare', sans-serif; fill: #9da7b3; }
+      .box-title { font: 700 24px 'Noto Sans CJK KR', 'NanumSquare', sans-serif; fill: #e6edf3; }
+      .box-text { font: 400 19px 'Noto Sans CJK KR', 'NanumSquare', sans-serif; fill: #aeb8c4; }
+      .small { font: 600 17px 'Noto Sans CJK KR', 'NanumSquare', sans-serif; fill: #d7dee7; }
+      .arrow { stroke: #58a6ff; stroke-width: 5; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#58a6ff"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="#0d1117"/>
+  <text x="80" y="90" class="title">Day 4 · Contour Filtering Pipeline</text>
+  <text x="82" y="132" class="subtitle">흰색 영역을 ‘검사 가능한 후보’로 바꾸는 구조</text>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="210" width="210" height="170" rx="22" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <text x="175" y="260" class="box-title" text-anchor="middle">1. 원본 이미지</text>
+    <rect x="110" y="285" width="130" height="62" rx="10" fill="#243042"/>
+    <circle cx="145" cy="316" r="18" fill="#637083"/>
+    <rect x="176" y="300" width="42" height="34" rx="6" fill="#8994a3"/>
+    <text x="175" y="405" class="box-text" text-anchor="middle">조명·반사·텍스처 포함</text>
+
+    <rect x="330" y="210" width="210" height="170" rx="22" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <text x="435" y="260" class="box-title" text-anchor="middle">2. Binary Mask</text>
+    <rect x="372" y="285" width="126" height="62" rx="8" fill="#05070a"/>
+    <circle cx="405" cy="316" r="15" fill="#fff"/>
+    <rect x="444" y="298" width="34" height="36" rx="5" fill="#fff"/>
+    <text x="435" y="405" class="box-text" text-anchor="middle">관심 영역은 흰색</text>
+
+    <rect x="590" y="210" width="210" height="170" rx="22" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <text x="695" y="260" class="box-title" text-anchor="middle">3. Contour</text>
+    <path d="M635 336 C650 280, 735 278, 754 330 C742 358, 657 362, 635 336 Z" fill="none" stroke="#58a6ff" stroke-width="5"/>
+    <circle cx="635" cy="336" r="5" fill="#58a6ff"/><circle cx="754" cy="330" r="5" fill="#58a6ff"/>
+    <text x="695" y="405" class="box-text" text-anchor="middle">경계 좌표 목록</text>
+
+    <rect x="850" y="210" width="250" height="170" rx="22" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <text x="975" y="260" class="box-title" text-anchor="middle">4. 특징 계산</text>
+    <text x="885" y="307" class="small">• area / perimeter</text>
+    <text x="885" y="338" class="small">• bbox / centroid</text>
+    <text x="885" y="369" class="small">• aspect / fill ratio</text>
+    <text x="975" y="405" class="box-text" text-anchor="middle">후보를 숫자로 표현</text>
+
+    <rect x="1150" y="210" width="370" height="170" rx="22" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <text x="1335" y="260" class="box-title" text-anchor="middle">5. 규칙 판정</text>
+    <rect x="1190" y="292" width="125" height="50" rx="12" fill="#173a26" stroke="#3fb950"/>
+    <text x="1252" y="324" class="small" text-anchor="middle">Accepted</text>
+    <rect x="1350" y="292" width="130" height="50" rx="12" fill="#412124" stroke="#f85149"/>
+    <text x="1415" y="324" class="small" text-anchor="middle">Rejected</text>
+    <text x="1335" y="405" class="box-text" text-anchor="middle">탈락 이유를 함께 기록</text>
+  </g>
+
+  <path d="M280 295 L330 295" class="arrow"/>
+  <path d="M540 295 L590 295" class="arrow"/>
+  <path d="M800 295 L850 295" class="arrow"/>
+  <path d="M1100 295 L1150 295" class="arrow"/>
+
+  <g filter="url(#shadow)">
+    <rect x="100" y="510" width="1400" height="285" rx="26" fill="#111820" stroke="#30363d" stroke-width="2"/>
+    <text x="150" y="570" class="box-title">Candidate Record · 한 후보를 일관된 dictionary로 관리</text>
+
+    <rect x="150" y="620" width="250" height="105" rx="16" fill="#182436" stroke="#58a6ff"/>
+    <text x="275" y="660" class="box-title" text-anchor="middle">위치</text>
+    <text x="275" y="698" class="box-text" text-anchor="middle">bbox · centroid</text>
+
+    <rect x="435" y="620" width="250" height="105" rx="16" fill="#182436" stroke="#58a6ff"/>
+    <text x="560" y="660" class="box-title" text-anchor="middle">크기</text>
+    <text x="560" y="698" class="box-text" text-anchor="middle">area · width · height</text>
+
+    <rect x="720" y="620" width="300" height="105" rx="16" fill="#182436" stroke="#58a6ff"/>
+    <text x="870" y="660" class="box-title" text-anchor="middle">모양</text>
+    <text x="870" y="698" class="box-text" text-anchor="middle">perimeter · aspect · fill</text>
+
+    <rect x="1055" y="620" width="390" height="105" rx="16" fill="#182436" stroke="#58a6ff"/>
+    <text x="1250" y="660" class="box-title" text-anchor="middle">판정과 설명</text>
+    <text x="1250" y="698" class="box-text" text-anchor="middle">accepted · rejection_reasons</text>
+  </g>
+
+  <text x="800" y="850" class="subtitle" text-anchor="middle">핵심: 검출 결과뿐 아니라 ‘왜 통과하거나 탈락했는지’를 저장한다.</text>
+</svg>
